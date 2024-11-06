@@ -1,0 +1,163 @@
+To solve a classification problem using a feedforward neural network with the Backpropagation algorithm, let's take the Wheat Seed Dataset as an example. This dataset is often used for classification tasks and contains features related to different attributes of wheat seeds, with the goal of predicting the type of wheat based on these attributes.
+
+Steps:
+Load and preprocess the Wheat Seed dataset.
+Split the data into training and testing sets.
+Construct a feedforward neural network.
+Train the network using the backpropagation algorithm.
+Evaluate the model.
+Make predictions.
+We will implement a simple neural network using the Backpropagation algorithm from scratch.
+
+Wheat Seed Dataset
+The Wheat Seed dataset consists of four features:
+
+Area (A)
+Perimeter (P)
+Compactness (C)
+Length of Kernel (L)
+Width of Kernel (W)
+Asymmetry Coefficient (AC)
+Length of Kernel Groove (LG)
+The target is one of three classes, representing types of wheat seeds.
+
+1. Load and Preprocess Data
+We will use the Wheat Seed Dataset, which can be found in CSV format. You can load it using pandas and preprocess the data accordingly.
+
+python
+Copy code
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import shuffle
+
+# Load the Wheat Seed Dataset (assumed to be in CSV format)
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00352/seeds.csv"
+df = pd.read_csv(url, header=None)
+
+# Dataset columns (based on UCI Wheat Seed Dataset documentation)
+df.columns = ['Area', 'Perimeter', 'Compactness', 'Length', 'Width', 'Asymmetry', 'Kernel Groove', 'Class']
+
+# Shuffle the dataset
+df = shuffle(df)
+
+# Separate features (X) and target (y)
+X = df.drop(columns=['Class']).values
+y = df['Class'].values
+
+# Standardize the features (scale them to mean 0 and standard deviation 1)
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Convert the target variable into one-hot encoded format
+y_encoded = pd.get_dummies(y).values  # One-hot encoding
+
+# Split the data into training and testing sets (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
+2. Construct the Feedforward Neural Network
+We will define a simple feedforward neural network with one hidden layer. This network will be trained using the backpropagation algorithm.
+
+python
+Copy code
+import numpy as np
+
+# Define the Feedforward Neural Network Class
+class NeuralNetwork:
+    def __init__(self, input_size, hidden_size, output_size):
+        # Initialize the weights and biases
+        self.weights1 = np.random.randn(input_size, hidden_size)  # Weights for input to hidden layer
+        self.bias1 = np.zeros((1, hidden_size))  # Bias for hidden layer
+        
+        self.weights2 = np.random.randn(hidden_size, output_size)  # Weights for hidden to output layer
+        self.bias2 = np.zeros((1, output_size))  # Bias for output layer
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+    def sigmoid_derivative(self, x):
+        return x * (1 - x)  # Derivative of sigmoid function
+
+    def forward(self, X):
+        # Forward pass through the network
+        self.layer1 = self.sigmoid(np.dot(X, self.weights1) + self.bias1)
+        self.output = self.sigmoid(np.dot(self.layer1, self.weights2) + self.bias2)
+        return self.output
+
+    def backward(self, X, y, learning_rate=0.1):
+        # Backpropagation algorithm
+        
+        # Compute the error at the output layer
+        output_error = y - self.output
+        output_delta = output_error * self.sigmoid_derivative(self.output)
+        
+        # Compute the error at the hidden layer
+        hidden_error = output_delta.dot(self.weights2.T)
+        hidden_delta = hidden_error * self.sigmoid_derivative(self.layer1)
+        
+        # Update weights and biases using the learning rate
+        self.weights2 += self.layer1.T.dot(output_delta) * learning_rate
+        self.bias2 += np.sum(output_delta, axis=0, keepdims=True) * learning_rate
+        
+        self.weights1 += X.T.dot(hidden_delta) * learning_rate
+        self.bias1 += np.sum(hidden_delta, axis=0, keepdims=True) * learning_rate
+
+    def train(self, X, y, epochs=1000, learning_rate=0.1):
+        # Training loop
+        for epoch in range(epochs):
+            self.forward(X)
+            self.backward(X, y, learning_rate)
+            
+            # Optionally print the loss (mean squared error) every 100 epochs
+            if epoch % 100 == 0:
+                loss = np.mean(np.square(y - self.output))
+                print(f"Epoch {epoch}, Loss: {loss}")
+
+    def predict(self, X):
+        # Make predictions
+        return np.argmax(self.forward(X), axis=1)
+3. Train the Model
+Now that we've defined the neural network, we can train it using the Wheat Seed data.
+
+python
+Copy code
+# Define the size of input, hidden, and output layers
+input_size = X_train.shape[1]  # Number of input features (7 in this case)
+hidden_size = 10  # Size of the hidden layer (arbitrary choice)
+output_size = y_train.shape[1]  # Number of classes (3 types of wheat)
+
+# Initialize the neural network
+nn = NeuralNetwork(input_size, hidden_size, output_size)
+
+# Train the model on the training data
+nn.train(X_train, y_train, epochs=1000, learning_rate=0.1)
+4. Evaluate the Model
+After training the model, we can evaluate its performance on the test set:
+
+python
+Copy code
+# Make predictions on the test data
+predictions = nn.predict(X_test)
+
+# Evaluate accuracy
+y_test_class = np.argmax(y_test, axis=1)  # Convert one-hot encoded test labels back to integer labels
+accuracy = np.mean(predictions == y_test_class)
+print(f"Test Accuracy: {accuracy * 100:.2f}%")
+5. Make Predictions on New Data
+Finally, we can use the trained model to predict the class of new wheat seed data:
+
+python
+Copy code
+# Example of new data (features: Area, Perimeter, etc.)
+new_data = np.array([[14.44, 14.27, 0.876, 5.64, 2.45, 4.15, 0.197]])  # Replace with actual data
+new_data_scaled = scaler.transform(new_data)  # Don't forget to scale the new data
+prediction = nn.predict(new_data_scaled)
+
+# Output the predicted class
+print(f"Predicted class: {prediction}")
+Summary
+Data Loading and Preprocessing: We loaded the Wheat Seed dataset, scaled the features, and encoded the target labels.
+Neural Network Construction: We built a simple neural network with one hidden layer, using the sigmoid activation function and backpropagation for training.
+Training: The network was trained on the training set for 1000 epochs, adjusting weights using backpropagation.
+Evaluation: The model was evaluated on the test set, and we calculated its accuracy.
+Prediction: The trained model was used to make predictions on new data.
+This is a basic implementation of a neural network using backpropagation for the Wheat Seed classification problem. You can further optimize the model by experimenting with different network architectures, activation functions, and training parameters.
