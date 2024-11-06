@@ -1,0 +1,41 @@
+import java.util.Arrays;
+import java.util.Comparator;
+
+public class LuckBalance {
+
+    public static int luckBalance(int k, int[][] contests) {
+        // Sort contests by importance and luck in descending order
+        Arrays.sort(contests, (a, b) -> b[1] - a[1]);
+
+        int totalLuck = 0;
+
+        for (int[] contest : contests) {
+            int luck = contest[1];
+            int importance = contest[0];
+
+            if (importance == 1 && k > 0) {
+                // Take the important contest to lose if we still have quota (k)
+                totalLuck += luck;
+                k--;
+            } else if (importance == 1) {
+                // For important contests we must win (once k is exhausted), subtract luck
+                totalLuck -= luck;
+            } else {
+                // Always add luck for non-important contests
+                totalLuck += luck;
+            }
+        }
+
+        return totalLuck;
+    }
+
+    public static void main(String[] args) {
+        int[][] contests = {
+            {1, 10}, {1, 5}, {1, 8}, {0, 7}, {0, 3}
+        };
+        int k = 2;
+
+        int maxLuck = luckBalance(k, contests);
+        System.out.println("Maximum Luck: " + maxLuck);
+    }
+}
