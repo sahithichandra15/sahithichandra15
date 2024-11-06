@@ -1,0 +1,138 @@
+To carry out Exploratory Data Analysis (EDA) and then implement the CART (Classification and Regression Trees) algorithm on a dataset, we’ll follow these steps:
+
+Perform EDA to understand the dataset's structure, distribution, and relationships.
+Implement the CART algorithm to build a decision tree.
+Classify a new sample based on the trained decision tree.
+For this example, let’s use the popular Iris dataset as it’s suitable for CART decision trees and well-known for classification problems.
+
+Step 1: Exploratory Data Analysis (EDA)
+python
+Copy code
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+
+# Load the Iris dataset
+data = load_iris()
+df = pd.DataFrame(data.data, columns=data.feature_names)
+df['target'] = data.target
+
+# Display the first few rows of the dataset
+print("First few rows of the dataset:")
+print(df.head())
+
+# Summary statistics
+print("\nSummary Statistics:")
+print(df.describe())
+
+# Check for missing values
+print("\nMissing values in each column:")
+print(df.isnull().sum())
+
+# Distribution of target classes
+print("\nDistribution of target classes:")
+print(df['target'].value_counts())
+
+# Visualize pairwise relationships
+sns.pairplot(df, hue="target", palette="Set1", diag_kind="kde")
+plt.show()
+
+# Correlation heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(df.corr(), annot=True, cmap="coolwarm")
+plt.title("Feature Correlation Heatmap")
+plt.show()
+EDA Insights
+Summary Statistics: Provides an overview of each feature’s range, mean, and quartiles.
+Class Distribution: Shows the distribution of target classes to ensure the data is not overly imbalanced.
+Pairwise Relationships: pairplot helps visualize separability between classes and spot patterns or clusters.
+Correlation Matrix: Reveals relationships among features, which can help decide if feature engineering is needed.
+Step 2: Implement CART Algorithm for Decision Tree Learning
+We'll train a decision tree classifier using CART (built-in in sklearn's DecisionTreeClassifier) and visualize it.
+
+python
+Copy code
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.metrics import classification_report, accuracy_score
+
+# Split the data into features and target variable
+X = df.drop('target', axis=1)
+y = df['target']
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Initialize the Decision Tree Classifier with CART
+tree_classifier = DecisionTreeClassifier(random_state=42)
+tree_classifier.fit(X_train, y_train)
+
+# Make predictions
+y_pred = tree_classifier.predict(X_test)
+
+# Evaluate the model
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+print("Accuracy Score:", accuracy_score(y_test, y_pred))
+
+# Visualize the decision tree
+plt.figure(figsize=(12, 8))
+plot_tree(tree_classifier, feature_names=data.feature_names, class_names=data.target_names, filled=True)
+plt.title("Decision Tree")
+plt.show()
+Step 3: Classify a New Sample
+To classify a new sample, we’ll pass it through the trained decision tree model.
+
+python
+Copy code
+# New sample (for example, based on typical Iris data ranges)
+new_sample = [[5.9, 3.0, 5.1, 1.8]]  # Petal and Sepal dimensions
+
+# Classify the new sample
+predicted_class = tree_classifier.predict(new_sample)
+print("\nPredicted Class for the new sample:", data.target_names[predicted_class[0]])
+Analysis of Overfitting
+After evaluating the initial model, if we notice overfitting (e.g., high accuracy on training data but lower on test data), we can implement pruning using cost complexity pruning (ccp_alpha).
+
+python
+Copy code
+# Cost Complexity Pruning to avoid overfitting
+path = tree_classifier.cost_complexity_pruning_path(X_train, y_train)
+ccp_alphas = path.ccp_alphas
+
+# Train trees for each alpha to observe impact
+trees = []
+for alpha in ccp_alphas:
+    clf = DecisionTreeClassifier(random_state=42, ccp_alpha=alpha)
+    clf.fit(X_train, y_train)
+    trees.append(clf)
+
+# Evaluate the pruned trees on training and test data
+train_scores = [clf.score(X_train, y_train) for clf in trees]
+test_scores = [clf.score(X_test, y_test) for clf in trees]
+
+# Plot the effect of pruning on accuracy
+plt.figure(figsize=(10, 6))
+plt.plot(ccp_alphas, train_scores, marker='o', label="Training Accuracy")
+plt.plot(ccp_alphas, test_scores, marker='o', label="Testing Accuracy")
+plt.xlabel("Alpha")
+plt.ylabel("Accuracy")
+plt.title("Accuracy vs Alpha for Training and Testing sets")
+plt.legend()
+plt.show()
+
+# Choose the best model based on the alpha that maximizes test accuracy
+best_alpha = ccp_alphas[np.argmax(test_scores)]
+pruned_tree = DecisionTreeClassifier(random_state=42, ccp_alpha=best_alpha)
+pruned_tree.fit(X_train, y_train)
+
+# Evaluate the pruned tree on test data
+y_test_pruned_pred = pruned_tree.predict(X_test)
+print("\nClassification Report on Test Data (Pruned):")
+print(classification_report(y_test, y_test_pruned_pred))
+Summary
+EDA provided valuable insights about feature distributions, correlations, and class distributions.
+Decision Tree with CART was trained on the dataset and visualized.
+Classifying New Samples: After training, the model classified new samples based on the decision rules.
+Pruning helped to reduce overfitting, resulting in better generalization by finding an optimal ccp_alpha to simplify the tree.
