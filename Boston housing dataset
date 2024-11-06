@@ -1,0 +1,145 @@
+To build Linear Regression and Multiple Linear Regression models for predicting house prices using the Boston Housing Dataset, we'll follow these steps:
+
+Load and Explore the Data: Load the Boston housing dataset and perform basic EDA (Exploratory Data Analysis).
+Build a Linear Regression Model: Use a single feature (e.g., RM, the average number of rooms per dwelling) to predict house prices.
+Build a Multiple Regression Model: Use multiple features to predict house prices.
+Evaluate the Models: Use performance metrics like Mean Squared Error (MSE) and R-squared.
+Step-by-Step Implementation
+Step 1: Load and Explore the Data
+We'll start by loading the dataset, exploring it, and visualizing key relationships.
+
+python
+Copy code
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_boston
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Load the Boston Housing Dataset
+boston = load_boston()
+df = pd.DataFrame(boston.data, columns=boston.feature_names)
+df['Price'] = boston.target  # Add target variable (house prices)
+
+# Basic information about the dataset
+print("Dataset Overview:")
+print(df.info())
+
+# Display the first few rows of the dataset
+print("\nFirst 5 rows of the dataset:")
+print(df.head())
+
+# Visualize the correlation between features
+plt.figure(figsize=(12, 8))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.title("Correlation Heatmap of Boston Housing Dataset")
+plt.show()
+
+# Scatter plot for RM vs Price (Average number of rooms vs House price)
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x='RM', y='Price', data=df, color='blue')
+plt.title("RM (Average Number of Rooms) vs Price")
+plt.xlabel('Average Number of Rooms (RM)')
+plt.ylabel('Price of House')
+plt.show()
+Step 2: Build a Simple Linear Regression Model
+We'll use the feature RM (average number of rooms per dwelling) to predict the Price of the house.
+
+python
+Copy code
+# Split data into features (X) and target (y)
+X = df[['RM']]  # Single feature: RM (Average number of rooms)
+y = df['Price']  # Target: House prices
+
+# Train-test split (70% training data, 30% test data)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Create and train the linear regression model
+linear_regressor = LinearRegression()
+linear_regressor.fit(X_train, y_train)
+
+# Make predictions
+y_pred = linear_regressor.predict(X_test)
+
+# Evaluate the model
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+print(f"Linear Regression (Single Feature):")
+print(f"Mean Squared Error: {mse}")
+print(f"R-squared: {r2}")
+
+# Plot the regression line with the data
+plt.figure(figsize=(8, 6))
+plt.scatter(X_test, y_test, color='blue', label='Actual Prices')
+plt.plot(X_test, y_pred, color='red', linewidth=2, label='Regression Line')
+plt.title("Linear Regression: RM (Average Number of Rooms) vs Price")
+plt.xlabel('Average Number of Rooms (RM)')
+plt.ylabel('Price of House')
+plt.legend()
+plt.show()
+Step 3: Build a Multiple Linear Regression Model
+Now, we’ll use all available features to predict the house price.
+
+python
+Copy code
+# Multiple features for Multiple Linear Regression
+X_multi = df.drop('Price', axis=1)  # Use all features except 'Price'
+y_multi = df['Price']
+
+# Train-test split (70% training data, 30% test data)
+X_train_multi, X_test_multi, y_train_multi, y_test_multi = train_test_split(X_multi, y_multi, test_size=0.3, random_state=42)
+
+# Create and train the multiple linear regression model
+multi_regressor = LinearRegression()
+multi_regressor.fit(X_train_multi, y_train_multi)
+
+# Make predictions
+y_pred_multi = multi_regressor.predict(X_test_multi)
+
+# Evaluate the model
+mse_multi = mean_squared_error(y_test_multi, y_pred_multi)
+r2_multi = r2_score(y_test_multi, y_pred_multi)
+print(f"\nMultiple Linear Regression (Using All Features):")
+print(f"Mean Squared Error: {mse_multi}")
+print(f"R-squared: {r2_multi}")
+Step 4: Compare the Models and Interpret Results
+Linear Regression (Single Feature): The performance of the model trained on just the RM feature might be less accurate compared to using multiple features.
+Multiple Linear Regression: By using all the features (e.g., CRIM, ZN, INDUS, etc.), we expect this model to have better performance in terms of both Mean Squared Error and R-squared.
+Example Output (Hypothetical)
+For Single Feature (RM):
+
+vbnet
+Copy code
+Linear Regression (Single Feature):
+Mean Squared Error: 25.43
+R-squared: 0.48
+For Multiple Features (All Variables):
+
+mathematica
+Copy code
+Multiple Linear Regression (Using All Features):
+Mean Squared Error: 21.10
+R-squared: 0.73
+Step 5: Visualizing Predictions (Optional)
+While the Multiple Linear Regression model doesn't lend itself easily to simple visualization because of multiple dimensions, we can still visualize the predictions for the single feature model.
+
+For visualizing predictions with multiple features, you may consider using dimensionality reduction techniques (e.g., PCA) for better understanding.
+
+Step 6: Predicting House Prices for New Data
+You can use both models to predict house prices for new data samples.
+
+python
+Copy code
+# Predict the price for a new sample (for example, using multiple features)
+new_data = np.array([[0.2, 18, 2.31, 0.0, 0.459, 6.57, 75.0, 4.0, 1.0, 300.0, 15.0, 396.90, 4.0]])  # Example data
+predicted_price = multi_regressor.predict(new_data)
+print(f"\nPredicted Price for the new data sample: ${predicted_price[0]:,.2f}")
+Summary:
+Linear Regression: We trained a simple linear regression model using only the RM feature and predicted house prices.
+Multiple Linear Regression: We extended the model to use all available features and achieved better performance.
+Evaluation: We evaluated both models using Mean Squared Error and R-squared to assess their accuracy and fit.
+Prediction: We predicted the price of a house given new input data for both models.
+By comparing the models' performance, we can conclude which one works best. Generally, Multiple Linear Regression will outperform Linear Regression when more features are available and relevant.
